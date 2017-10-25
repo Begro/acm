@@ -1,8 +1,9 @@
 package liu.yan.acm.singleton;
 
 /**
- * 内部类单例
- *
+ * 静态内部类单例
+ * 利用的是classloader的加载类的特性，保证唯一
+ * 并且只有在使用时才会加载
  * @author 刘研
  * @create 2017-10-24 16:30
  **/

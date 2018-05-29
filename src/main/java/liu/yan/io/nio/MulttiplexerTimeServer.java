@@ -93,6 +93,9 @@ public class MulttiplexerTimeServer implements Runnable {
                     String body = new String(bytes, "utf-8");
                     System.out.println("receive:" + body);
                     dowrite(socketChannel);
+                } else if (read < 0) {
+                    key.cancel();
+                    socketChannel.close();
                 }
             }
         }

@@ -1,4 +1,4 @@
-package liu.yan.io.netty.time;
+package liu.yan.io.netty.tcp;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
@@ -14,7 +14,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
  * @description
  * @date 2018/5/29
  */
-public class TimeClient {
+public class TcpClient {
     public void connect(String ip, int port) throws InterruptedException {
         EventLoopGroup eventExecutors = new NioEventLoopGroup();
         try {
@@ -22,7 +22,7 @@ public class TimeClient {
             bootstrap.group(eventExecutors).channel(NioSocketChannel.class).option(ChannelOption.TCP_NODELAY, true)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new TimeClientHandler());
+                            ch.pipeline().addLast(new TcpClientHandler());
                         }
                     });
             ChannelFuture sync = bootstrap.connect(ip, port).sync();
@@ -34,6 +34,6 @@ public class TimeClient {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        new TimeClient().connect("127.0.0.1", 8080);
+        new TcpClient().connect("127.0.0.1", 8080);
     }
 }

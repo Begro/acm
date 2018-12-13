@@ -1,6 +1,10 @@
 package liu.yan.concurrent;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author liu yan
@@ -9,12 +13,12 @@ import java.util.*;
  */
 public class Test {
 	public static void main(String[] args) {
-		List<String> nodes = new ArrayList<>();
-		nodes.add("127.0.0.1:9000");
-		nodes.add("127.0.0.1:9001");
-		nodes.add("127.0.0.1:9002");
-		ConsistentHashMap<String, Integer> consistentHashMap = new ConsistentHashMap<String, Integer>(nodes);
-		print(consistentHashMap);
+		ConcurrentLinkedQueue concurrentLinkedQueue  = new ConcurrentLinkedQueue();
+		concurrentLinkedQueue.offer(1);
+		concurrentLinkedQueue.offer(2);
+		concurrentLinkedQueue.offer(3);
+		concurrentLinkedQueue.poll();
+		concurrentLinkedQueue.poll();
 	}
 
 	private static void print(ConsistentHashMap<String, Integer> consistentHashMap) {

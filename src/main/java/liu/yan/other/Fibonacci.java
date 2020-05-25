@@ -1,6 +1,5 @@
 package liu.yan.other;
 
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
 class Fibonacci extends RecursiveTask<Integer> {
@@ -12,7 +11,6 @@ class Fibonacci extends RecursiveTask<Integer> {
 
 	@Override
 	protected Integer compute() {
-		ForkJoinPool forkJoinPool = new ForkJoinPool()
 		if (n <= 1) {
 			return n;
 		}

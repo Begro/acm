@@ -7,98 +7,39 @@ import java.util.*;
  * @date 15:47 2020/5/12
  * @description
  */
-public class StickyAssignor {
+public class StickyAssignor<K extends Comparable<K>> {
 
 
-	private static Map<String, SortedSet<Integer>> currentAssignment = new TreeMap<>();
-	private static int currentQueueSize;
+	private Map<K, SortedSet<Integer>> currentAssignment = new TreeMap<>();
+	private int currentQueueSize;
 
-	public static void main(String[] args) {
-		new StickyAssignor().test(0);
-
-//		System.out.println("##############################");
-//
-//		new StickyAssignor().test(3);
-
-	}
-
-
-	private void test(int serverid) {
-		int queueSize = 8;
-		List<String> clients = new ArrayList<>();
-		clients.add("c0");
-		new StickyAssignor().assign(serverid, clients, queueSize);
-		print(clients);
-		clients.add("c1");
-		new StickyAssignor().assign(serverid, clients, queueSize);
-		print(clients);
-		new StickyAssignor().assign(serverid, clients, 16);
-		print(clients);
-		new StickyAssignor().assign(serverid, clients, queueSize);
-		print(clients);
-//		clients.add("c2");
-//		new StickyAssignor().assign(serverid, clients, queueSize);
-//		print(clients);
-//		clients.add("c3");
-//		new StickyAssignor().assign(serverid, clients, queueSize);
-//		print(clients);
-//		clients.remove("c3");
-//		new StickyAssignor().assign(serverid, clients, queueSize);
-//		print(clients);
-//		clients.add("c3");
-//		new StickyAssignor().assign(serverid, clients, queueSize);
-//		print(clients);
-//		clients.remove("c2");
-//		new StickyAssignor().assign(serverid, clients, queueSize);
-//		print(clients);
-//		clients.add("c2");
-//		clients.add("c4");
-//		clients.add("c5");
-//		clients.add("c6");
-//		clients.add("c7");
-//		clients.add("c8");
-//		clients.add("c9");
-//		clients.add("c10");
-//		new StickyAssignor().assign(serverid, clients, queueSize);
-//		print(clients);
-	}
-
-	private static void print(List<String> clients) {
-		System.out.println("====================================");
-		clients.forEach(e -> System.out.print(e + " "));
-		System.out.println();
-		for (Map.Entry<String, SortedSet<Integer>> entry : currentAssignment.entrySet()) {
-			System.out.print(entry.getKey() + "----->");
-			for (Integer integer : entry.getValue()) {
-				System.out.print(integer + ",");
-			}
-			System.out.println();
-			System.out.println("------------------------");
-		}
-		System.out.println("====================================");
-	}
-
-
-	private void assign(int serverId, List<String> clients, int queueSize) {
-		clients.sort(String::compareTo);
+	/**
+	 * @param serverId
+	 * @param clients   must can be Comparator
+	 * @param queueSize
+	 * @return
+	 */
+	public List<Integer> assign(int serverId, List<K> clients, int queueSize) {
+		clients.sort(null);
 		int clientSize = clients.size();
-		int offset = clientSize < queueSize ? serverId : (serverId * queueSize) % clientSize;
-
+//		int offset = clientSize < queueSize ? serverId : (serverId * queueSize) % clientSize;
+//		int offset = clientSize < queueSize ? serverId : serverId*queueSize;
+		int offset = queueSize;
 		int average = queueSize / clientSize;
 		int remainder = queueSize % clientSize;
-		Map<String, Integer> targetAssignment = new TreeMap<>();
+		Map<K, Integer> targetAssignment = new TreeMap<>();
 		for (int i = offset; i < clientSize + offset; i++) {
-			String client = clients.get(i % clientSize);
+			K client = clients.get(i % clientSize);
 			targetAssignment.put(client, average + (remainder > 0 ? 1 : 0));
 			remainder--;
 		}
 		SortedSet<Integer> freeQueues = new TreeSet<>();
 		if (currentAssignment.isEmpty()) {
-			for (int i = 0; i < queueSize; i++) {
+			for (int i = 1; i <= queueSize; i++) {
 				freeQueues.add(i);
 			}
 		} else if (currentQueueSize < queueSize) {
-			for (int i = currentQueueSize; i < queueSize; i++) {
+			for (int i = currentQueueSize + 1; i <= queueSize; i++) {
 				freeQueues.add(i);
 			}
 		} else if (currentQueueSize > queueSize) {
@@ -107,14 +48,16 @@ public class StickyAssignor {
 		currentQueueSize = queueSize;
 		//先过滤一遍多分配的队列
 		freeMore(freeQueues, targetAssignment);
+		List<Integer> result = new ArrayList<>(freeQueues);
 		//过滤一遍少分配的
 		assignLess(freeQueues, targetAssignment);
 		//分配一遍剩余的
 		assignFree(freeQueues);
+		return result;
 	}
 
 	private void reduceQueue(int queueSize) {
-		for (Map.Entry<String, SortedSet<Integer>> entry : currentAssignment.entrySet()) {
+		for (Map.Entry<K, SortedSet<Integer>> entry : currentAssignment.entrySet()) {
 			SortedSet<Integer> value = entry.getValue();
 			if (value.isEmpty()) {
 				continue;
@@ -132,7 +75,7 @@ public class StickyAssignor {
 			return;
 		}
 		while (!freeQueues.isEmpty()) {
-			for (Map.Entry<String, SortedSet<Integer>> entry : currentAssignment.entrySet()) {
+			for (Map.Entry<K, SortedSet<Integer>> entry : currentAssignment.entrySet()) {
 				if (freeQueues.isEmpty()) {
 					return;
 				}
@@ -143,9 +86,12 @@ public class StickyAssignor {
 		}
 	}
 
-	private void assignLess(SortedSet<Integer> freeQueues, Map<String, Integer> targetAssignment) {
-		for (Map.Entry<String, Integer> entry : targetAssignment.entrySet()) {
-			String client = entry.getKey();
+	private void assignLess(SortedSet<Integer> freeQueues, Map<K, Integer> targetAssignment) {
+		if (freeQueues.isEmpty()) {
+			return;
+		}
+		for (Map.Entry<K, Integer> entry : targetAssignment.entrySet()) {
+			K client = entry.getKey();
 			int targetSize = entry.getValue();
 			if (!currentAssignment.containsKey(client)) {
 				int assignSize = freeQueues.size() < targetSize ? freeQueues.size() : targetSize;
@@ -173,13 +119,13 @@ public class StickyAssignor {
 		}
 	}
 
-	private void freeMore(SortedSet<Integer> freeQueues, Map<String, Integer> targetAssignment) {
+	private void freeMore(SortedSet<Integer> freeQueues, Map<K, Integer> targetAssignment) {
 		if (currentAssignment.isEmpty()) {
 			return;
 		}
-		List<String> toBeDelete = new ArrayList<>();
-		for (Map.Entry<String, SortedSet<Integer>> entry : currentAssignment.entrySet()) {
-			String client = entry.getKey();
+		List<K> toBeDelete = new ArrayList<>();
+		for (Map.Entry<K, SortedSet<Integer>> entry : currentAssignment.entrySet()) {
+			K client = entry.getKey();
 			SortedSet<Integer> queues = entry.getValue();
 			if (!targetAssignment.containsKey(client)) {
 				freeQueues.addAll(queues);
@@ -195,11 +141,23 @@ public class StickyAssignor {
 			}
 		}
 		if (!toBeDelete.isEmpty()) {
-			for (String client : toBeDelete) {
+			for (K client : toBeDelete) {
 				currentAssignment.remove(client);
 			}
 		}
 	}
 
 
+	public Map<K, SortedSet<Integer>> getCurrentAssignment() {
+		return currentAssignment;
+	}
+
+	public K getClientChannelByQueue(int queue) {
+		for (Map.Entry<K, SortedSet<Integer>> entry : currentAssignment.entrySet()) {
+			if (entry.getValue().contains(queue)) {
+				return entry.getKey();
+			}
+		}
+		return null;
+	}
 }
